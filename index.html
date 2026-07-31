@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StudyMate — AI Study Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- ── Top bar ─────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">SM</span>
+      <span class="brand-name">StudyMate</span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="planner">Planner</button>
+      <button class="tab" data-tab="revision">Revision</button>
+      <button class="tab" data-tab="chat">Chat</button>
+    </nav>
+    <div class="topbar-actions">
+      <span class="status-dot" id="statusDot" title="Checking configuration..."></span>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <svg id="iconSun" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6L4.2 4.2M19.8 19.8l-1.4-1.4M5.6 18.4l-1.4 1.4M19.8 4.2l-1.4 1.4M12 17a5 5 0 100-10 5 5 0 000 10z"/></svg>
+        <svg id="iconMoon" viewBox="0 0 24 24" width="18" height="18" style="display:none"><path fill="currentColor" d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Banner for config errors ────────────────────────── -->
+  <div class="banner" id="configBanner" hidden>
+    <span id="configBannerText"></span>
+    <button id="configBannerRetry">Retry</button>
+  </div>
+
+  <main class="content">
+
+    <!-- ═══ DASHBOARD ═══════════════════════════════════════ -->
+    <section class="panel active" id="panel-dashboard">
+      <div class="panel-head">
+        <h1>Today's focus</h1>
+        <p class="muted" id="todayDate"></p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-num" id="statSubjects">0</span>
+          <span class="stat-label">Subjects tracked</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statExams">0</span>
+          <span class="stat-label">Exams ahead</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statStreak">0</span>
+          <span class="stat-label">Day streak</span>
+        </div>
+        <div class="stat-card pomodoro-card">
+          <div class="pomo-display">
+            <span id="pomoTime">25:00</span>
+            <span class="pomo-label" id="pomoLabel">Focus</span>
+          </div>
+          <div class="pomo-controls">
+            <button id="pomoStart" class="btn-sm">Start</button>
+            <button id="pomoReset" class="btn-sm ghost">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head">
+            <h2>Exam countdown</h2>
+            <button class="btn-sm" id="addExamBtn">+ Add exam</button>
+          </div>
+          <div id="examList" class="exam-list">
+            <p class="empty-state">No exams yet. Add one to start the countdown.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Daily tip</h2>
+            <button class="btn-sm ghost" id="refreshTip">↻</button>
+          </div>
+          <p id="dailyTip" class="tip-text muted">Loading a tip for you…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PLANNER ═════════════════════════════════════════ -->
+    <section class="panel" id="panel-planner">
+      <div class="panel-head">
+        <h1>Build a study schedule</h1>
+        <p class="muted">Tell StudyMate your subjects and exam date — it builds the day-wise plan.</p>
+      </div>
+
+      <div class="card">
+        <form id="plannerForm" class="form-grid">
+          <div class="field">
+            <label>Exam date</label>
+            <input type="date" id="examDate" required>
+          </div>
+          <div class="field">
+            <label>Daily study hours</label>
+            <input type="number" id="dailyHours" min="1" max="14" value="4" required>
+          </div>
+          <div class="field wide">
+            <label>Subjects</label>
+            <div id="subjectRows" class="subject-rows"></div>
+            <button type="button" class="btn-sm ghost" id="addSubjectRow">+ Add subject</button>
+          </div>
+          <button type="submit" class="btn-primary wide" id="generateBtn">Generate schedule</button>
+        </form>
+      </div>
+
+      <div class="card" id="scheduleResultCard" hidden>
+        <div class="card-head">
+          <h2>Your schedule</h2>
+        </div>
+        <div id="scheduleResult" class="markdown-output"></div>
+      </div>
+    </section>
+
+    <!-- ═══ REVISION ════════════════════════════════════════ -->
+    <section class="panel" id="panel-revision">
+      <div class="panel-head">
+        <h1>Revision tracker</h1>
+        <p class="muted">Give StudyMate the topics you're weak on — get a spaced-repetition plan.</p>
+      </div>
+
+      <div class="card">
+        <form id="revisionForm" class="form-grid">
+          <div class="field">
+            <label>Subject</label>
+            <input type="text" id="revSubject" placeholder="e.g. Physics" required>
+          </div>
+          <div class="field">
+            <label>Exam date</label>
+            <input type="date" id="revExamDate">
+          </div>
+          <div class="field wide">
+            <label>Topics (comma separated)</label>
+            <input type="text" id="revTopics" placeholder="Kinematics, Thermodynamics, Optics" required>
+          </div>
+          <div class="field wide">
+            <label>Weak areas (comma separated, optional)</label>
+            <input type="text" id="revWeak" placeholder="Optics">
+          </div>
+          <button type="submit" class="btn-primary wide" id="revisionBtn">Generate revision plan</button>
+        </form>
+      </div>
+
+      <div class="card" id="revisionResultCard" hidden>
+        <div class="card-head"><h2>Your revision plan</h2></div>
+        <div id="revisionResult" class="markdown-output"></div>
+      </div>
+    </section>
+
+    <!-- ═══ CHAT ════════════════════════════════════════════ -->
+    <section class="panel" id="panel-chat">
+      <div class="chat-wrap">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg assistant">
+            <div class="bubble">
+              Hi, I'm StudyMate 👋 Ask me anything about study planning, exam prep, or techniques like Pomodoro and spaced repetition.
+            </div>
+          </div>
+        </div>
+        <form class="chat-input-row" id="chatForm">
+          <input type="text" id="chatInput" placeholder="Ask StudyMate a question..." autocomplete="off">
+          <button type="submit" class="btn-primary" id="chatSend">Send</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Add exam modal ───────────────────────────────────── -->
+<div class="modal-overlay" id="examModalOverlay" hidden>
+  <div class="modal">
+    <h3>Add exam</h3>
+    <div class="field">
+      <label>Exam name</label>
+      <input type="text" id="examName" placeholder="e.g. Physics Board Exam">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="examModalDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm ghost" id="examModalCancel">Cancel</button>
+      <button class="btn-primary" id="examModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+<script src="app.js"></script>
