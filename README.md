@@ -1,5 +1,12 @@
 # StudyMate — AI Study Planner Agent
 
+Made By:
+Kartik Mathur, 25BCE11381: Handled frontend
+Harsh Kurzekar, 25BCE10840: Handled backend
+Kaustubh Duratkar, 25BAI10592: Created presentation
+Taushit Budholiya, 25BAI11503: Managed Git
+Sarthak Kawalkar, 25BAI11438: Managed API integration
+
 A Flask web app that calls **IBM Watsonx.ai (Granite models)** directly via
 `requests` to build personalized, day-wise study schedules, revision plans,
 and a study-coach chat.
@@ -113,4 +120,4 @@ For a simple deployment (e.g. Render, Railway, Heroku-style platforms):
    `WATSONX_URL`, `FLASK_SECRET_KEY`, `FLASK_ENV=production`) in your
    platform's dashboard — never commit `.env`.
 2. Use `gunicorn app:app` as the start command (already in
-   `requirements.txt`).
+   `requirements.txt`).  
